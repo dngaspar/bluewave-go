@@ -1,0 +1,4 @@
+numpy==1.23.5
+pydivsufsort==0.0.6
+PyMuPDF==1.21.0
+sklearn==0.0.post1
