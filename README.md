@@ -10,11 +10,18 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install bluewav
 ```bash
 pip install -r requirements.txt
 ```
-
 For installation of black in your local environment, please follow the instructions here:
 ```
 https://black.readthedocs.io/en/stable/integrations/editors.html
 ```
+
+## Models
+Create a folder "models" in root of the repo
+```bash
+mkdir models
+```
+
+Place clf.p file in the model's directory.
 
 ## Usage
 To run this, an example would be:
