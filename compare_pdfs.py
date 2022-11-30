@@ -7,13 +7,15 @@ import json
 import sys
 import time
 
-from src import (
-    pdf_duplicate_pages,
-    compare_pdfs_text,
-    compare_pdfs_util,
-    importance_score,
-    get_file_data,
+from src.pdf_duplicate_pages import (
+    find_duplicate_pages,
+    get_dup_page_results,
+    remove_duplicate_pages,
 )
+from src.compare_pdfs_text import compare_two_pdfs_text
+from src.compare_pdfs_util import list_of_unique_dicts
+from src.importance_score import calculate_importance_score
+from src.get_file_data import get_file_data
 
 VERSION = "1.6.4"
 
@@ -69,6 +71,7 @@ def get_file_info(file_data, suspicious_pairs):
 
 
 def get_similarity_scores(file_data, suspicious_pairs, methods_run):
+    """Get Similarity Scores"""
     method_names = [
         ("Common digit sequence", "digits"),
         ("Common text string", "text"),
@@ -81,10 +84,10 @@ def get_similarity_scores(file_data, suspicious_pairs, methods_run):
         file_a, file_b = [p["file_index"] for p in sus["pages"]]
         method = sus["type"]
         if file_a not in reorg_sus_pairs:
-            reorg_sus_pairs[file_a] = {}
-        if file_b not in reorg_sus_pairs[file_a]:
-            reorg_sus_pairs[file_a][file_b] = {}
-        if method not in reorg_sus_pairs[file_a][file_b]:
+            reorg_sus_pairs[file_a] = {file_b: {method: []}}
+        elif file_b not in reorg_sus_pairs[file_a]:
+            reorg_sus_pairs[file_a][file_b] = {method: []}
+        elif method not in reorg_sus_pairs[file_a][file_b]:
             reorg_sus_pairs[file_a][file_b][method] = []
 
         reorg_sus_pairs[file_a][file_b][method].append(sus)
@@ -95,30 +98,30 @@ def get_similarity_scores(file_data, suspicious_pairs, methods_run):
         for b in range(a + 1, len(file_data)):
 
             if a not in similarity_scores:
-                similarity_scores[a] = {}
-            if b not in similarity_scores[a]:
+                similarity_scores[a] = {b: {}}
+            elif b not in similarity_scores[a]:
                 similarity_scores[a][b] = {}
 
             for method_long, method_short in method_names:
                 if method_short in methods_run:
                     try:
-                        suspairs = reorg_sus_pairs[a][b].get(method_long, [])
+                        sus_pairs = reorg_sus_pairs[a][b].get(method_long, [])
                     except KeyError:
-                        suspairs = []
+                        sus_pairs = []
                     union = 0
                     intersect = 0
                     if method_long == "Common digit sequence":
-                        intersect = sum(s["length"] for s in suspairs)
+                        intersect = sum(s["length"] for s in sus_pairs)
                         a_clean = file_data[a]["full_digits"]
                         b_clean = file_data[b]["full_digits"]
                         union = len(a_clean) + len(b_clean) - intersect
                     elif method_long == "Common text string":
-                        intersect = sum(s["length"] for s in suspairs)
+                        intersect = sum(s["length"] for s in sus_pairs)
                         a_clean = file_data[a]["full_text"]
                         b_clean = file_data[b]["full_text"]
                         union = len(a_clean) + len(b_clean) - intersect
                     elif method_long == "Identical image":
-                        intersect = len(suspairs)
+                        intersect = len(sus_pairs)
                         union = (
                             len(file_data[a]["image_hashes"])
                             + len(file_data[b]["image_hashes"])
@@ -136,11 +139,7 @@ def get_similarity_scores(file_data, suspicious_pairs, methods_run):
 
 
 def get_version():
-    # repo = Repo()
-    # ver = repo.git.describe('--always')
-    # currdir = os.path.dirname(os.path.realpath(__file__))
-    # ver = subprocess.check_output(["git", "describe", "--always"], cwd=currdir).strip()
-    # return ver.decode("utf-8")
+    """Get Version"""
     return VERSION
 
 
@@ -161,7 +160,7 @@ def main(
     if verbose:
         print("Reading files...")
     read_pdf_sec_t0 = time.time()
-    file_data = get_file_data.main(filenames, regen_cache, version=VERSION)
+    file_data = get_file_data(filenames, regen_cache, version=VERSION)
     read_pdf_sec = time.time() - read_pdf_sec_t0
     if sidecar_only:
         return
@@ -191,85 +190,31 @@ def main(
 
             # Find duplicate pages and remove those from the analysis
             page_analysis_sec_t0 = time.time()
+            a_new = a
+            b_new = b
             if "pages" in methods:
                 if verbose:
                     print("Finding duplicate pages...")
-                duplicate_pages = pdf_duplicate_pages.find_duplicate_pages(
-                    data_a=a, data_b=b
-                )
-                dup_page_results = pdf_duplicate_pages.get_dup_page_results(
-                    duplicate_pages
-                )
-                suspicious_pairs.extend(dup_page_results)
+                a_new, b_new = execute_pages_method(a, b, suspicious_pairs)
 
-                a_new = pdf_duplicate_pages.remove_duplicate_pages(a, duplicate_pages)
-                b_new = pdf_duplicate_pages.remove_duplicate_pages(b, duplicate_pages)
-            else:
-                a_new = a
-                b_new = b
             page_analysis_sec += time.time() - page_analysis_sec_t0
 
             # Compare numbers
             digit_analysis_sec_t0 = time.time()
             if "digits" in methods:
-                if verbose:
-                    print("Comparing digits...")
-                digit_results = compare_pdfs_text.main(
-                    data_a=a_new,
-                    data_b=b_new,
-                    text_suffix="digits",
-                    min_len=20,
-                    comparison_type_name="Common digit sequence",
-                )
-                suspicious_pairs.extend(digit_results)
+                execute_digits_method(a_new, b_new, suspicious_pairs, verbose)
             digit_analysis_sec += time.time() - digit_analysis_sec_t0
 
             # Compare texts
             text_analysis_sec_t0 = time.time()
             if "text" in methods:
-                if verbose:
-                    print("Comparing texts...")
-                text_results = compare_pdfs_text.main(
-                    data_a=a_new,
-                    data_b=b_new,
-                    text_suffix="text",
-                    min_len=300,
-                    comparison_type_name="Common text string",
-                )
-                suspicious_pairs.extend(text_results)
+                execute_text_method(a_new, b_new, suspicious_pairs, verbose)
             text_analysis_sec += time.time() - text_analysis_sec_t0
 
             # Compare images
             image_analysis_sec_t0 = time.time()
             if "images" in methods:
-                if verbose:
-                    print("Comparing images...")
-                identical_images = compare_images(
-                    a_new["image_hashes"],
-                    b_new["image_hashes"],
-                )
-                any_images_are_sus = len(identical_images) > 0
-                if any_images_are_sus:
-                    for img_hash, info_a, info_b in identical_images:
-                        bbox_a, sus_page_a = info_a
-                        bbox_b, sus_page_b = info_b
-                        sus_result = {
-                            "type": "Identical image",
-                            "image_hash": img_hash,
-                            "pages": [
-                                {
-                                    "file_index": a["file_index"],
-                                    "page": sus_page_a,
-                                    "bbox": bbox_a,
-                                },
-                                {
-                                    "file_index": b["file_index"],
-                                    "page": sus_page_b,
-                                    "bbox": bbox_b,
-                                },
-                            ],
-                        }
-                        suspicious_pairs.append(sus_result)
+                execute_images_method(a, a_new, b, b_new, suspicious_pairs, verbose)
             image_analysis_sec += time.time() - image_analysis_sec_t0
         total_analysis_sec = time.time() - total_analysis_t0
 
@@ -277,7 +222,7 @@ def main(
     # multiple common substrings with another page)
     if verbose:
         print("Removing duplicate sus pairs...")
-    suspicious_pairs = compare_pdfs_util.list_of_unique_dicts(suspicious_pairs)
+    suspicious_pairs = list_of_unique_dicts(suspicious_pairs)
 
     # Filter out irrelevant sus pairs
     # if verbose: print('Removing irrelevant pairs...')
@@ -291,7 +236,7 @@ def main(
     if not no_importance:
         if verbose:
             print("\tAdd importance scores...")
-        suspicious_pairs = importance_score.main(suspicious_pairs)
+        suspicious_pairs = calculate_importance_score(suspicious_pairs)
     importance_scoring_sec = time.time() - importance_scoring_sec_t0
 
     post_processing_sec_t0 = time.time()
@@ -348,6 +293,76 @@ def main(
         print(json.dumps(result), file=sys.stdout)
 
     return result
+
+
+def execute_pages_method(a, b, suspicious_pairs):
+    """Pages method"""
+    duplicate_pages = find_duplicate_pages(data_a=a, data_b=b)
+    dup_page_results = get_dup_page_results(duplicate_pages)
+    suspicious_pairs.extend(dup_page_results)
+    a_new = remove_duplicate_pages(a, duplicate_pages)
+    b_new = remove_duplicate_pages(b, duplicate_pages)
+    return a_new, b_new
+
+
+def execute_digits_method(a_new, b_new, suspicious_pairs, verbose):
+    """Digits Method"""
+    if verbose:
+        print("Comparing digits...")
+    digit_results = compare_two_pdfs_text(
+        data_a=a_new,
+        data_b=b_new,
+        text_suffix="digits",
+        min_len=20,
+        comparison_type_name="Common digit sequence",
+    )
+    suspicious_pairs.extend(digit_results)
+
+
+def execute_text_method(a_new, b_new, suspicious_pairs, verbose):
+    """Text Method"""
+    if verbose:
+        print("Comparing texts...")
+    text_results = compare_two_pdfs_text(
+        data_a=a_new,
+        data_b=b_new,
+        text_suffix="text",
+        min_len=300,
+        comparison_type_name="Common text string",
+    )
+    suspicious_pairs.extend(text_results)
+
+
+def execute_images_method(a, a_new, b, b_new, suspicious_pairs, verbose):
+    """Images Method"""
+    if verbose:
+        print("Comparing images...")
+    identical_images = compare_images(
+        a_new["image_hashes"],
+        b_new["image_hashes"],
+    )
+    any_images_are_sus = len(identical_images) > 0
+    if any_images_are_sus:
+        for img_hash, info_a, info_b in identical_images:
+            bbox_a, sus_page_a = info_a
+            bbox_b, sus_page_b = info_b
+            sus_result = {
+                "type": "Identical image",
+                "image_hash": img_hash,
+                "pages": [
+                    {
+                        "file_index": a["file_index"],
+                        "page": sus_page_a,
+                        "bbox": bbox_a,
+                    },
+                    {
+                        "file_index": b["file_index"],
+                        "page": sus_page_b,
+                        "bbox": bbox_b,
+                    },
+                ],
+            }
+            suspicious_pairs.append(sus_result)
 
 
 if __name__ == "__main__":

@@ -24,6 +24,10 @@ python compare_pdfs.py -f a.pdf b.pdf
 ```
 
 ```bash
+python compare_pdfs.py -f a.pdf b.pdf -v
+```
+
+```bash
 python compare_pdfs.py -f data/test_pdfs/00026_04_fda-K071597_test_data.pdf data/test_pdfs/small_test/copied_data.pdf
 ```
 

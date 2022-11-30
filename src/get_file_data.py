@@ -166,7 +166,7 @@ def add_ignore_to_blocks(blocks):
     return blocks
 
 
-def main(filenames, regen_cache, version):
+def get_file_data(filenames, regen_cache, version):
     data = []
     for i, full_filename in enumerate(filenames):
 

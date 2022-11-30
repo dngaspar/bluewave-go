@@ -1,13 +1,12 @@
 from src import compare_pdfs_util
+import pickle
+import numpy as np
+import re
+import os
 
 
-def main(suspicious_pairs):
-    import pickle
-    import numpy as np
-    import re
-    import os
-
-    datadir = compare_pdfs_util.get_datadir()
+def calculate_importance_score(suspicious_pairs):
+    datadir = compare_pdfs_util.get_models_directory()
     try:
         with open(f"{datadir}{os.path.sep}clf.p", "rb") as f:
             vectorizer, clf = pickle.load(f)
@@ -37,9 +36,9 @@ def main(suspicious_pairs):
     if suspicious_pairs:
         vecs = vectorizer.transform(corpus).toarray()
         dummies = np.array(dummies)
-        X = np.hstack((vecs, dummies))
+        x_ = np.hstack((vecs, dummies))
 
-        importance_pred = clf.predict(X).flatten()
+        importance_pred = clf.predict(x_).flatten()
         importance_pred = compare_pdfs_util.logistic(importance_pred)
     else:
         importance_pred = []

@@ -1,4 +1,6 @@
 import functools
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.metrics.pairwise import pairwise_distances
 
 
 def find_blocks_of_sus_substr(blocks, sus_start, h):
@@ -24,6 +26,44 @@ def find_blocks_of_sus_substr(blocks, sus_start, h):
     return blocks_covered
 
 
+def get_page_str_block_str(blocks, j, h, text_suffix):
+    """
+    Inputs:
+        blocks - list of dicts
+        j - index of occurrence in text
+        h - length of suspicious string
+    """
+    pages = []
+    block_idxs = []
+    block_i = 0
+    for block in blocks:
+        too_early = block[f"cum_len_{text_suffix}"] + len(block[text_suffix]) < j
+        too_late = block[f"cum_len_{text_suffix}"] > j + h + 1
+        if too_early or too_late:
+            block_i += 1
+        else:
+            pages += [block["page_num"]] * len(block[text_suffix])
+            block_idxs += [block_i] * len(block[text_suffix])
+            block_i += 1
+    # trim
+    first_block = blocks[block_idxs[0]]
+    last_block = blocks[block_idxs[-1]]
+    pad_start = (
+        j - first_block[f"cum_len_{text_suffix}"]
+    )  # How many chars until we see the sus string
+    pad_end = (last_block[f"cum_len_{text_suffix}"] + len(last_block[text_suffix])) - (
+        j + h
+    )  # Extra chars at the end
+
+    if pad_end == 0:  # because [-0] index works weirdly
+        pages = pages[pad_start:]
+        block_idxs = block_idxs[pad_start:]
+    else:
+        pages = pages[pad_start:-pad_end]
+        block_idxs = block_idxs[pad_start:-pad_end]
+    return pages, block_idxs
+
+
 def get_lined_up_blocks(blocks1, blocks2, text_suffix, sus_str, j1, j2, h):
     """
     Inputs:
@@ -44,47 +84,8 @@ def get_lined_up_blocks(blocks1, blocks2, text_suffix, sus_str, j1, j2, h):
         blocks1a and blocks2a "line up" and contain approximately the same text
     """
 
-    def get_page_str_block_str(blocks, j, h):
-        """
-        Inputs:
-            blocks - list of dicts
-            j - index of occurrence in text
-            h - length of suspicious string
-        """
-        pages = []
-        block_idxs = []
-        block_i = 0
-        for block in blocks:
-            too_early = block[f"cum_len_{text_suffix}"] + len(block[text_suffix]) < j
-            too_late = block[f"cum_len_{text_suffix}"] > j + h + 1
-            if too_early or too_late:
-                block_i += 1
-            else:
-                pages += [block["page_num"]] * len(block[text_suffix])
-                block_idxs += [block_i] * len(block[text_suffix])
-                block_i += 1
-        # trim
-        first_block = blocks[block_idxs[0]]
-        last_block = blocks[block_idxs[-1]]
-        pad_start = (
-            j - first_block[f"cum_len_{text_suffix}"]
-        )  # How many chars until we see the sus string
-        pad_end = (
-            last_block[f"cum_len_{text_suffix}"] + len(last_block[text_suffix])
-        ) - (
-            j + h
-        )  # Extra chars at the end
-
-        if pad_end == 0:  # because [-0] index works weirdly
-            pages = pages[pad_start:]
-            block_idxs = block_idxs[pad_start:]
-        else:
-            pages = pages[pad_start:-pad_end]
-            block_idxs = block_idxs[pad_start:-pad_end]
-        return pages, block_idxs
-
-    pages1, block_idxs_1 = get_page_str_block_str(blocks1, j1, h)
-    pages2, block_idxs_2 = get_page_str_block_str(blocks2, j2, h)
+    pages1, block_idxs_1 = get_page_str_block_str(blocks1, j1, h, text_suffix)
+    pages2, block_idxs_2 = get_page_str_block_str(blocks2, j2, h, text_suffix)
     assert len(blocks1) > 0
     assert len(block_idxs_1) == len(
         block_idxs_2
@@ -157,6 +158,27 @@ def merge_blocks(blocks):
     return new_block
 
 
+def calculate_distance(idx1, idx2, block_pairs):
+    # block pair 1 and block pair 2 are both elements of the list block_pairs.
+    # We pass indexes here because the pairwise_distances function needs something
+    #  that can be turned into a numpy array, and block_pairs doesn't seem to work.
+    block_pair_1 = block_pairs[int(idx1[0])]
+    block_pair_2 = block_pairs[int(idx2[0])]
+
+    def block_distance(block1, block2):
+        # block1 and block2 must be blocks on the same document
+        if (
+            block1["page_num"] != block2["page_num"]
+        ):  # Different page blocks will not be merged
+            return 1e99
+        return block1["bbox"].box_distance(block2["bbox"])
+
+    dist0 = block_distance(block_pair_1[0], block_pair_2[0])
+    dist1 = block_distance(block_pair_2[1], block_pair_2[1])
+    # Return the max of the two distances to prevent wrong mergers
+    return max(dist0, dist1)
+
+
 def agglomerative_cluster_blocks(block_pairs, threshold=0.5):
     """
     If the bboxes are close together, combine them into one.
@@ -173,34 +195,12 @@ def agglomerative_cluster_blocks(block_pairs, threshold=0.5):
     Outputs:
         same format
     """
-    from sklearn.cluster import AgglomerativeClustering
-    from sklearn.metrics.pairwise import pairwise_distances
 
     if len(block_pairs) <= 1:
         return block_pairs
 
-    def distance(idx1, idx2):
-        # block pair 1 and block pair 2 are both elements of the list block_pairs.
-        # We pass indexes here because the pairwise_distances function needs something
-        #  that can be turned into a numpy array, and block_pairs doesn't seem to work.
-        block_pair_1 = block_pairs[int(idx1[0])]
-        block_pair_2 = block_pairs[int(idx2[0])]
-
-        def block_distance(block1, block2):
-            # block1 and block2 must be blocks on the same document
-            if (
-                block1["page_num"] != block2["page_num"]
-            ):  # Different page blocks will not be merged
-                return 1e99
-            return block1["bbox"].box_distance(block2["bbox"])
-
-        dist0 = block_distance(block_pair_1[0], block_pair_2[0])
-        dist1 = block_distance(block_pair_2[1], block_pair_2[1])
-        # Return the max of the two distances to prevent wrong mergers
-        return max(dist0, dist1)
-
     idxs = [[i] for i in range(len(block_pairs))]
-    m = pairwise_distances(idxs, idxs, metric=distance)
+    m = pairwise_distances(idxs, idxs, block_pairs, metric=calculate_distance)
 
     agg = AgglomerativeClustering(
         n_clusters=None,
@@ -227,7 +227,7 @@ def agglomerative_cluster_blocks(block_pairs, threshold=0.5):
     return clustered_block_pairs
 
 
-def main(data_a, data_b, text_suffix, min_len, comparison_type_name):
+def compare_two_pdfs_text(data_a, data_b, text_suffix, min_len, comparison_type_name):
     """
     Inputs:
         data_a - data for first PDF
