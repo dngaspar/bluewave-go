@@ -16,8 +16,8 @@ def find_blocks_of_sus_substr(blocks, sus_start, h):
         block_end = block_start + len(text)
         # block_start comes from len() and so is IN the block
         # block_end is NOT in the block
-        is_left = sus_start < block_start and sus_start+h < block_start
-        is_right = block_end <= sus_start and block_end <= sus_start+h
+        is_left = sus_start < block_start and sus_start + h < block_start
+        is_right = block_end <= sus_start and block_end <= sus_start + h
         if not (is_left or is_right):
             blocks_covered.append(block)
 
@@ -43,6 +43,7 @@ def get_lined_up_blocks(blocks1, blocks2, text_suffix, sus_str, j1, j2, h):
         ]
         blocks1a and blocks2a "line up" and contain approximately the same text
     """
+
     def get_page_str_block_str(blocks, j, h):
         """
         Inputs:
@@ -54,21 +55,27 @@ def get_lined_up_blocks(blocks1, blocks2, text_suffix, sus_str, j1, j2, h):
         block_idxs = []
         block_i = 0
         for block in blocks:
-            too_early = block[f'cum_len_{text_suffix}'] + len(block[text_suffix]) < j
-            too_late = block[f'cum_len_{text_suffix}'] > j + h + 1
+            too_early = block[f"cum_len_{text_suffix}"] + len(block[text_suffix]) < j
+            too_late = block[f"cum_len_{text_suffix}"] > j + h + 1
             if too_early or too_late:
                 block_i += 1
             else:
-                pages += [block['page_num']]*len(block[text_suffix])
-                block_idxs += [block_i]*len(block[text_suffix])
+                pages += [block["page_num"]] * len(block[text_suffix])
+                block_idxs += [block_i] * len(block[text_suffix])
                 block_i += 1
         # trim
         first_block = blocks[block_idxs[0]]
         last_block = blocks[block_idxs[-1]]
-        pad_start = j - first_block[f'cum_len_{text_suffix}'] # How many chars until we see the sus string
-        pad_end = (last_block[f'cum_len_{text_suffix}'] + len(last_block[text_suffix])) - (j+h) # Extra chars at the end
+        pad_start = (
+            j - first_block[f"cum_len_{text_suffix}"]
+        )  # How many chars until we see the sus string
+        pad_end = (
+            last_block[f"cum_len_{text_suffix}"] + len(last_block[text_suffix])
+        ) - (
+            j + h
+        )  # Extra chars at the end
 
-        if pad_end == 0: # because [-0] index works weirdly
+        if pad_end == 0:  # because [-0] index works weirdly
             pages = pages[pad_start:]
             block_idxs = block_idxs[pad_start:]
         else:
@@ -79,26 +86,28 @@ def get_lined_up_blocks(blocks1, blocks2, text_suffix, sus_str, j1, j2, h):
     pages1, block_idxs_1 = get_page_str_block_str(blocks1, j1, h)
     pages2, block_idxs_2 = get_page_str_block_str(blocks2, j2, h)
     assert len(blocks1) > 0
-    assert len(block_idxs_1) == len(block_idxs_2) # Should be same bc the common substring is same
+    assert len(block_idxs_1) == len(
+        block_idxs_2
+    )  # Should be same bc the common substring is same
     assert len(blocks1) >= max(block_idxs_1)
     assert len(pages1) == len(sus_str)
 
     result = []
-    sus_str_bit = sus_str[0] # First char
-    queue1 = set([block_idxs_1[0]])
-    queue2 = set([block_idxs_2[0]])
+    sus_str_bit = sus_str[0]  # First char
+    queue1 = {block_idxs_1[0]}
+    queue2 = {block_idxs_2[0]}
     for i in range(1, len(block_idxs_1)):
-        blocks1_change = block_idxs_1[i] != block_idxs_1[i-1]
-        blocks2_change = block_idxs_2[i] != block_idxs_2[i-1]
-        page1_change = pages1[i] != pages1[i-1]
-        page2_change = pages2[i] != pages2[i-1]
+        blocks1_change = block_idxs_1[i] != block_idxs_1[i - 1]
+        blocks2_change = block_idxs_2[i] != block_idxs_2[i - 1]
+        page1_change = pages1[i] != pages1[i - 1]
+        page2_change = pages2[i] != pages2[i - 1]
         both_blocks_changed = blocks1_change and blocks2_change
         any_pages_changed = page1_change or page2_change
         if both_blocks_changed or any_pages_changed:
             result.append((list(queue1), list(queue2), sus_str_bit))
-            sus_str_bit = ''
-            queue1 = set([block_idxs_1[i]])
-            queue2 = set([block_idxs_2[i]])
+            sus_str_bit = ""
+            queue1 = {block_idxs_1[i]}
+            queue2 = {block_idxs_2[i]}
         else:
             sus_str_bit += sus_str[i]
             queue1.add(block_idxs_1[i])
@@ -117,31 +126,33 @@ def find_page_of_sus_image(pages, sus_hash):
     for page_num, page_hashes in pages:
         if sus_hash in page_hashes:
             return page_num
-    return 'Page not found'
+    return "Page not found"
 
 
 def filter_sus_pairs(suspicious_pairs):
     # TODO
+    significant_text_pairs = 0
+    significant_other_pairs = 0
     return significant_text_pairs + significant_other_pairs
 
 
 def merge_blocks(blocks):
-    new_text = ' '.join(b['text'] for b in blocks if b['text'])
-    new_digits = ' '.join(b['digits'] for b in blocks if b['digits'])
-    new_cum_len_text = min(b['cum_len_text'] for b in blocks)
-    new_cum_len_digits = min(b['cum_len_digits'] for b in blocks)
-    new_page_num = min(b['page_num'] for b in blocks)
-    new_block_num = min(b['block_num'] for b in blocks if b['page_num']==new_page_num)
-    boxes = [b['bbox'] for b in blocks]
+    new_text = " ".join(b["text"] for b in blocks if b["text"])
+    new_digits = " ".join(b["digits"] for b in blocks if b["digits"])
+    new_cum_len_text = min(b["cum_len_text"] for b in blocks)
+    new_cum_len_digits = min(b["cum_len_digits"] for b in blocks)
+    new_page_num = min(b["page_num"] for b in blocks)
+    new_block_num = min(b["block_num"] for b in blocks if b["page_num"] == new_page_num)
+    boxes = [b["bbox"] for b in blocks]
     new_box = functools.reduce(lambda box_a, box_b: box_a.expand(box_b), boxes)
     new_block = {
-        'text': new_text,
-        'digits': new_digits,
-        'cum_len_text': new_cum_len_text,
-        'cum_len_digits': new_cum_len_digits,
-        'bbox': new_box,
-        'page_num': new_page_num,
-        'block_num': new_block_num,
+        "text": new_text,
+        "digits": new_digits,
+        "cum_len_text": new_cum_len_text,
+        "cum_len_digits": new_cum_len_digits,
+        "bbox": new_box,
+        "page_num": new_page_num,
+        "block_num": new_block_num,
     }
     return new_block
 
@@ -156,7 +167,7 @@ def agglomerative_cluster_blocks(block_pairs, threshold=0.5):
     and will never be merged.
 
     Inputs:
-        block_pairs - list of tuples, where each tuple has a 
+        block_pairs - list of tuples, where each tuple has a
             first block and a second block; block is a dict
 
     Outputs:
@@ -174,17 +185,19 @@ def agglomerative_cluster_blocks(block_pairs, threshold=0.5):
         #  that can be turned into a numpy array, and block_pairs doesn't seem to work.
         block_pair_1 = block_pairs[int(idx1[0])]
         block_pair_2 = block_pairs[int(idx2[0])]
-        
+
         def block_distance(block1, block2):
             # block1 and block2 must be blocks on the same document
-            if block1['page_num'] != block2['page_num']: # Different page blocks will not be merged
+            if (
+                block1["page_num"] != block2["page_num"]
+            ):  # Different page blocks will not be merged
                 return 1e99
-            return block1['bbox'].box_distance(block2['bbox'])
+            return block1["bbox"].box_distance(block2["bbox"])
 
         dist0 = block_distance(block_pair_1[0], block_pair_2[0])
         dist1 = block_distance(block_pair_2[1], block_pair_2[1])
         # Return the max of the two distances to prevent wrong mergers
-        return max(dist0, dist1) 
+        return max(dist0, dist1)
 
     idxs = [[i] for i in range(len(block_pairs))]
     m = pairwise_distances(idxs, idxs, metric=distance)
@@ -192,8 +205,8 @@ def agglomerative_cluster_blocks(block_pairs, threshold=0.5):
     agg = AgglomerativeClustering(
         n_clusters=None,
         distance_threshold=threshold,
-        affinity='precomputed',
-        linkage='single',
+        affinity="precomputed",
+        linkage="single",
     )
 
     u = agg.fit_predict(m)
@@ -210,7 +223,7 @@ def agglomerative_cluster_blocks(block_pairs, threshold=0.5):
         except KeyError:
             clusters[label] = block_pair
 
-    clustered_block_pairs = [bp for l, bp in clusters.items()]
+    clustered_block_pairs = [bp for _, bp in clusters.items()]
     return clustered_block_pairs
 
 
@@ -223,67 +236,62 @@ def main(data_a, data_b, text_suffix, min_len, comparison_type_name):
         min_len - minimum acceptable length of duplicate text
         comparison_type_name - what to put in the output for "type"
     """
-    import find_common_substrings
+    from src import find_common_substrings
 
     results = []
     common_substrings = find_common_substrings.find_common_substrings(
-        text1=data_a[f'full_{text_suffix}'],
-        text2=data_b[f'full_{text_suffix}'],
-        min_len=min_len
+        text1=data_a[f"full_{text_suffix}"],
+        text2=data_b[f"full_{text_suffix}"],
+        min_len=min_len,
     )
 
     if any(common_substrings):
         all_lined_up_blocks = []
 
         for sus_str, j1, j2, h in common_substrings:
-
             lined_up_blocks = get_lined_up_blocks(
-                data_a[f'blocks'],
-                data_b[f'blocks'],
-                text_suffix,
-                sus_str, j1, j2, h
+                data_a["blocks"], data_b["blocks"], text_suffix, sus_str, j1, j2, h
             )
             all_lined_up_blocks.extend(lined_up_blocks)
 
         # Merge all the lined up blocks
         merged_blocks = []
         for line_a, line_b, sus_str in all_lined_up_blocks:
-            merged_blocks.append(
-                (merge_blocks(line_a), merge_blocks(line_b), sus_str)
-            )
+            merged_blocks.append((merge_blocks(line_a), merge_blocks(line_b), sus_str))
 
         # Intelligently combine the merged blocks
         intelligently_combined_block_pairs = agglomerative_cluster_blocks(merged_blocks)
 
         # Filter out merged blocks
-        #TODO
+        # TODO
 
         for block0, block1, sus_substr in intelligently_combined_block_pairs:
             # sus_substr = block0['text'] # Temporary
-            if len(sus_substr) <= int(min_len*0.75):
+            if len(sus_substr) <= int(min_len * 0.75):
                 continue
 
             str_preview = sus_substr
             if len(str_preview) > 97:
-                str_preview = str_preview[:97].replace('\n', ' ')+'...'
+                str_preview = str_preview[:97].replace("\n", " ") + "..."
 
             sus_result = {
-                'type': comparison_type_name,
-                'block_text': block0['text'],
-                'string': sus_substr,
-                'string_preview': str_preview,
-                'length': len(sus_substr),
-                'pages': [
+                "type": comparison_type_name,
+                "block_text": block0["text"],
+                "string": sus_substr,
+                "string_preview": str_preview,
+                "length": len(sus_substr),
+                "pages": [
                     {
-                        'file_index': data_a['file_index'],
-                        'page': block0['page_num'],
-                        'bbox': block0['bbox'].as_tuple(),
-                    }, {
-                        'file_index': data_b['file_index'], 
-                        'page': block1['page_num'],
-                        'bbox': block1['bbox'].as_tuple(),
+                        "file_index": data_a["file_index"],
+                        "page": block0["page_num"],
+                        "bbox": block0["bbox"].as_tuple(),
                     },
-                ]
+                    {
+                        "file_index": data_b["file_index"],
+                        "page": block1["page_num"],
+                        "bbox": block1["bbox"].as_tuple(),
+                    },
+                ],
             }
 
             results.append(sus_result)

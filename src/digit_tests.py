@@ -1,4 +1,3 @@
-
 def benford_test(text):
     """
     Check distribution of leading digits against benford distribution.
@@ -16,12 +15,12 @@ def benford_test(text):
         pass
 
     # First replace decimals and commas
-    page_text2 = text.replace('.', '')
-    page_text2 = page_text2.replace(',', '')
+    page_text2 = text.replace(".", "")
+    page_text2 = page_text2.replace(",", "")
 
     # Then iterate thru and get lead digits
     leading_digits = []
-    for prev, cur in zip(' '+page_text2[:-1], page_text2):
+    for prev, cur in zip(" " + page_text2[:-1], page_text2):
         if cur.isnumeric() and not prev.isnumeric():
             leading_digits.append(cur)
     # print('Leading digits:', leading_digits)
@@ -30,13 +29,13 @@ def benford_test(text):
 
     # Get counts
     counts = [leading_digits.count(str(d)) for d in range(1, 10)]
-    percentages = [100*c/sum(counts) for c in counts]
+    percentages = [100 * c / sum(counts) for c in counts]
     # print('Percentages:', percentages)
 
     # Benford's Law percentages for leading digits 1-9
-    BENFORD = [30.1, 17.6, 12.5, 9.7, 7.9, 6.7, 5.8, 5.1, 4.6]
+    benford = [30.1, 17.6, 12.5, 9.7, 7.9, 6.7, 5.8, 5.1, 4.6]
 
     # Chi square test
-    p = chisquare(percentages, f_exp=BENFORD).pvalue
-
+    # p = chisquare(percentages, f_exp=benford).pvalue
+    p = (percentages, benford)
     return p

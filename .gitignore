@@ -1,0 +1,5 @@
+models/
+*.pdf
+*.jsoncached
+*__pycache__/
+*idea/
