@@ -1,6 +1,9 @@
 import functools
+
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics.pairwise import pairwise_distances
+
+from src import find_common_substrings
 
 
 # def find_blocks_of_sus_substr(blocks, sus_start, h):
@@ -123,11 +126,11 @@ def get_lined_up_blocks(blocks1, blocks2, text_suffix, sus_str, j1, j2, h):
     return result2
 
 
-def find_page_of_sus_image(pages, sus_hash):
-    for page_num, page_hashes in pages:
-        if sus_hash in page_hashes:
-            return page_num
-    return "Page not found"
+# def find_page_of_sus_image(pages, sus_hash):
+#     for page_num, page_hashes in pages:
+#         if sus_hash in page_hashes:
+#             return page_num
+#     return "Page not found"
 
 
 def filter_sus_pairs(suspicious_pairs):
@@ -236,7 +239,6 @@ def compare_two_pdfs_text(data_a, data_b, text_suffix, min_len, comparison_type_
         min_len - minimum acceptable length of duplicate text
         comparison_type_name - what to put in the output for "type"
     """
-    from src import find_common_substrings
 
     results = []
     common_substrings = find_common_substrings.find_common_substrings(

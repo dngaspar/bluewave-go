@@ -1,10 +1,11 @@
 import json
 import os
 import warnings
-from src import utils
 
 # PyMuPDF
 import fitz
+
+from src import utils
 
 fitz.TOOLS.mupdf_display_errors(False)
 
@@ -54,7 +55,7 @@ def page_skip_conditions(page_text):
 
 
 def block_skip_conditions(block_text):
-    conds = [
+    conditions = {
         "510(k)" in block_text,
         "New Hampshire Avenue" in block_text,
         "ISO " in block_text,
@@ -67,8 +68,8 @@ def block_skip_conditions(block_text):
         "+86" in block_text,
         "86-519" in block_text,
         not block_text,
-    ]
-    return conds
+    }
+    return conditions
 
 
 def read_blocks_and_hashes(filename):

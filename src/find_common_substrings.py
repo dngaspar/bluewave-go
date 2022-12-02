@@ -5,6 +5,16 @@ TEXT_SEP = "^_^"
 PAGE_SEP = "@@@"
 
 
+def is_subset_of_any_existing(new, existing):
+    new_start, new_end = new
+    for j1, _, h in existing:
+        ex_start = j1
+        ex_end = j1 + h
+        if ex_start <= new_start and new_end <= ex_end:
+            return True
+    return False
+
+
 def find_common_substrings(text1, text2, min_len):
     # Find all common non-overlapping substrings between two strings.
     # minLen is the minimum acceptable length of resulting common substrings.
@@ -38,7 +48,7 @@ def find_common_substrings(text1, text2, min_len):
     #   - cd
     #
     # We sort the candidates by length and remove those that are substrings of
-    # any previous candidate. Thus we are left with "bcd".
+    # any previous candidate. Thus, we are left with "bcd".
 
     text_combined = text1 + TEXT_SEP + text2
     sa = divsufsort(text_combined)
@@ -47,7 +57,7 @@ def find_common_substrings(text1, text2, min_len):
     lcp = np.array(lcp[:-1])
 
     # Collect candidates
-    candidates = []
+    # candidates = []
     length = len(text1)
     j1s = np.array(sa[:-1])
     j2s = np.array(sa[1:])
@@ -73,15 +83,6 @@ def find_common_substrings(text1, text2, min_len):
     my_h = my_h[sorted_idxs]
 
     # Go through and take out overlapping substrings
-
-    def is_subset_of_any_existing(new, existing):
-        new_start, new_end = new
-        for j1, _, h in existing:
-            ex_start = j1
-            ex_end = j1 + h
-            if ex_start <= new_start and new_end <= ex_end:
-                return True
-        return False
 
     offset = length + len(
         TEXT_SEP

@@ -10,7 +10,6 @@ import time
 from multiprocessing import cpu_count
 
 from src.compare_pdfs_text import compare_two_pdfs_text
-from src.utils import list_of_unique_dicts
 from src.get_file_data import get_file_data
 from src.importance_score import calculate_importance_score
 from src.pdf_duplicate_pages import (
@@ -18,6 +17,7 @@ from src.pdf_duplicate_pages import (
     get_dup_page_results,
     remove_duplicate_pages,
 )
+from src.utils import list_of_unique_dicts
 
 VERSION = "1.6.4"
 
@@ -190,7 +190,6 @@ def main(
     digit_analysis_sec = 0
     text_analysis_sec = 0
     image_analysis_sec = 0
-    total_analysis_sec = 0
     total_analysis_t0 = time.time()
     for i in range(len(filenames) - 1):
         for j in range(i + 1, len(filenames)):
@@ -243,7 +242,7 @@ def main(
             if "images" in methods:
                 execute_images_method(a, a_new, b, b_new, suspicious_pairs, verbose)
             image_analysis_sec += time.time() - image_analysis_sec_t0
-        total_analysis_sec = time.time() - total_analysis_t0
+    total_analysis_sec = time.time() - total_analysis_t0
 
     # Remove duplicate suspicious pairs (this might happen if a page has
     # multiple common substrings with another page)
