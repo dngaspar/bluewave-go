@@ -26,16 +26,23 @@ Place clf.p file in the model's directory.
 ## Usage
 To run this, an example would be:
 
-```bash
-python compare_pdfs.py -f a.pdf b.pdf
-```
 
 ```bash
-python compare_pdfs.py -f a.pdf b.pdf -v
+python compare_pdfs.py -f a.pdf b.pdf -v -p
+```
+
+To Execute without using cached data
+```bash
+python compare_pdfs.py -f a.pdf b.pdf -v -p -c
 ```
 
 ```bash
 python compare_pdfs.py -f data/test_pdfs/00026_04_fda-K071597_test_data.pdf data/test_pdfs/small_test/copied_data.pdf
+```
+
+## Delete all .jsoncached files
+```bash
+find . -name "*.jsoncached" -type f -delete
 ```
 
 ## Code Formatting

@@ -1,4 +1,4 @@
-from src.compare_pdfs_util import get_models_directory
+from src.utils import get_models_directory
 
 
 def test_get_models_directory():

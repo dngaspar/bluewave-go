@@ -3,27 +3,27 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics.pairwise import pairwise_distances
 
 
-def find_blocks_of_sus_substr(blocks, sus_start, h):
-    """
-    Inputs:
-        blocks - list of tups (text, cum_txt_len, bbox, page_num)
-        sus_start - int index of occurrence of substring
-        h - length of sus substr
-
-    Returns (page number int, bbox tup)
-    """
-    blocks_covered = []
-    for block in blocks:
-        text, block_start, bbox, page_num = block
-        block_end = block_start + len(text)
-        # block_start comes from len() and so is IN the block
-        # block_end is NOT in the block
-        is_left = sus_start < block_start and sus_start + h < block_start
-        is_right = block_end <= sus_start and block_end <= sus_start + h
-        if not (is_left or is_right):
-            blocks_covered.append(block)
-
-    return blocks_covered
+# def find_blocks_of_sus_substr(blocks, sus_start, h):
+#     """
+#     Inputs:
+#         blocks - list of tups (text, cum_txt_len, bbox, page_num)
+#         sus_start - int index of occurrence of substring
+#         h - length of sus substr
+#
+#     Returns (page number int, bbox tup)
+#     """
+#     blocks_covered = []
+#     for block in blocks:
+#         text, block_start, _, _ = block
+#         block_end = block_start + len(text)
+#         # block_start comes from len() and so is IN the block
+#         # block_end is NOT in the block
+#         is_left = sus_start < block_start and sus_start + h < block_start
+#         is_right = block_end <= sus_start and block_end <= sus_start + h
+#         if not (is_left or is_right):
+#             blocks_covered.append(block)
+#
+#     return blocks_covered
 
 
 def get_page_str_block_str(blocks, j, h, text_suffix):

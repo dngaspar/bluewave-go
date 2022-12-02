@@ -2,20 +2,22 @@
 Compare two pdf files
 """
 import argparse
+import concurrent.futures
 import datetime
 import json
 import sys
 import time
+from multiprocessing import cpu_count
 
+from src.compare_pdfs_text import compare_two_pdfs_text
+from src.utils import list_of_unique_dicts
+from src.get_file_data import get_file_data
+from src.importance_score import calculate_importance_score
 from src.pdf_duplicate_pages import (
     find_duplicate_pages,
     get_dup_page_results,
     remove_duplicate_pages,
 )
-from src.compare_pdfs_text import compare_two_pdfs_text
-from src.compare_pdfs_util import list_of_unique_dicts
-from src.importance_score import calculate_importance_score
-from src.get_file_data import get_file_data
 
 VERSION = "1.6.4"
 
@@ -160,7 +162,15 @@ def main(
     if verbose:
         print("Reading files...")
     read_pdf_sec_t0 = time.time()
-    file_data = get_file_data(filenames, regen_cache, version=VERSION)
+    file_data = []
+    with concurrent.futures.ProcessPoolExecutor(cpu_count()) as executor:
+        args_ = [
+            (file_name, file_index, regen_cache, VERSION)
+            for file_index, file_name in enumerate(filenames)
+        ]
+        result = executor.map(get_file_data, *zip(*args_))
+        for item in result:
+            file_data.append(item)
     read_pdf_sec = time.time() - read_pdf_sec_t0
     if sidecar_only:
         return
@@ -202,13 +212,30 @@ def main(
             # Compare numbers
             digit_analysis_sec_t0 = time.time()
             if "digits" in methods:
-                execute_digits_method(a_new, b_new, suspicious_pairs, verbose)
+                execute_method_executor(
+                    "digits",
+                    "Common digit sequence",
+                    20,
+                    a_new,
+                    b_new,
+                    suspicious_pairs,
+                    verbose,
+                )
+
             digit_analysis_sec += time.time() - digit_analysis_sec_t0
 
             # Compare texts
             text_analysis_sec_t0 = time.time()
             if "text" in methods:
-                execute_text_method(a_new, b_new, suspicious_pairs, verbose)
+                execute_method_executor(
+                    "text",
+                    "Common text string",
+                    300,
+                    a_new,
+                    b_new,
+                    suspicious_pairs,
+                    verbose,
+                )
             text_analysis_sec += time.time() - text_analysis_sec_t0
 
             # Compare images
@@ -305,32 +332,20 @@ def execute_pages_method(a, b, suspicious_pairs):
     return a_new, b_new
 
 
-def execute_digits_method(a_new, b_new, suspicious_pairs, verbose):
+def execute_method_executor(
+    text_suffix, comparison_type_name, min_len, a_new, b_new, suspicious_pairs, verbose
+):
     """Digits Method"""
     if verbose:
-        print("Comparing digits...")
-    digit_results = compare_two_pdfs_text(
+        print(f"Comparing {text_suffix}...")
+    results = compare_two_pdfs_text(
         data_a=a_new,
         data_b=b_new,
-        text_suffix="digits",
-        min_len=20,
-        comparison_type_name="Common digit sequence",
+        text_suffix=text_suffix,
+        min_len=min_len,
+        comparison_type_name=comparison_type_name,
     )
-    suspicious_pairs.extend(digit_results)
-
-
-def execute_text_method(a_new, b_new, suspicious_pairs, verbose):
-    """Text Method"""
-    if verbose:
-        print("Comparing texts...")
-    text_results = compare_two_pdfs_text(
-        data_a=a_new,
-        data_b=b_new,
-        text_suffix="text",
-        min_len=300,
-        comparison_type_name="Common text string",
-    )
-    suspicious_pairs.extend(text_results)
+    suspicious_pairs.extend(results)
 
 
 def execute_images_method(a, a_new, b, b_new, suspicious_pairs, verbose):
