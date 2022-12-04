@@ -40,6 +40,11 @@ python compare_pdfs.py -f a.pdf b.pdf -v -p -c
 python compare_pdfs.py -f data/test_pdfs/00026_04_fda-K071597_test_data.pdf data/test_pdfs/small_test/copied_data.pdf
 ```
 
+## Run Pytest
+```bash
+pytest
+```
+
 ## Delete all .jsoncached files
 ```bash
 find . -name "*.jsoncached" -type f -delete
