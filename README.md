@@ -42,7 +42,7 @@ python compare_pdfs.py -f data/test_pdfs/00026_04_fda-K071597_test_data.pdf data
 
 ## Run Pytest
 ```bash
-pytest -v --disable-warnings
+pytest -vv --disable-warnings
 ```
 
 ## Delete all .jsoncached files
