@@ -38,7 +38,7 @@ warnings.filterwarnings("ignore")
 
 
 def page_skip_conditions(page_text):
-    conds = [
+    conds = {
         "FORM FDA " in page_text,
         "Form FDA " in page_text,
         "PAPERWORK REDUCTION ACT" in page_text,
@@ -50,7 +50,7 @@ def page_skip_conditions(page_text):
         "Safety Data Sheet" in page_text,
         "SAFETY DATA SHEET" in page_text,
         "Contains Nonbinding Recommendations" in page_text,
-    ]
+    }
     return conds
 
 

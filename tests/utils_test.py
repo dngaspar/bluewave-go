@@ -21,14 +21,14 @@ def test_get_models_directory():
 )
 def test_list_of_unique_dicts(data, expected_output):
     """Check if function is removing duplicates in a dict"""
-    result = list_of_unique_dicts(data)
-    assert result == expected_output
+    actual_output = list_of_unique_dicts(data)
+    assert actual_output == expected_output
 
 
 @pytest.mark.parametrize(
-    "text, digits", [("abcd123", "123"), ("123", "123"), ("123.45", "12345")]
+    "text, expected_output", [("abcd123", "123"), ("123", "123"), ("123.45", "12345")]
 )
-def test_get_digits(text, digits):
+def test_get_digits(text, expected_output):
     """Test digits extraction from text"""
-    result = get_digits(text)
-    assert result == digits
+    actual_output = get_digits(text)
+    assert actual_output == expected_output
