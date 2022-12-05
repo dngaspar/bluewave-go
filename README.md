@@ -54,3 +54,7 @@ find . -name "*.jsoncached" -type f -delete
 ```bash
 pre-commit run --all-files
 ```
+
+```bash
+black src ./
+```
