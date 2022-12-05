@@ -89,10 +89,10 @@ class Box:
 #         }
 
 
-def get_datadir():
-    currdir = os.path.dirname(os.path.realpath(__file__))
-    parentdir = str(Path(currdir).parent)
-    return parentdir + os.path.sep + "models"
+def get_models_directory():
+    current_directory = os.path.dirname(os.path.realpath(__file__))
+    parent_directory = str(Path(current_directory).parent)
+    return parent_directory + os.path.sep + "models"
 
 
 def list_of_unique_dicts(dicts):

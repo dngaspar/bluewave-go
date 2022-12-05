@@ -52,13 +52,13 @@ def read_text_training_data():
 
 
 def create_and_train_classifier(X_train, y_train):
-    import compare_pdfs_util
+    import utils
     from sklearn import linear_model
 
     # clf = LogisticRegression(random_state=0)
     # clf = RandomForestClassifier(random_state=0)
     y_train_clipped = np.clip(y_train, 0.0001, 0.9999)
-    y_train_transf = compare_pdfs_util.logit(y_train_clipped)
+    y_train_transf = utils.logit(y_train_clipped)
     clf = linear_model.LinearRegression()
     clf.fit(X_train, y_train_transf)
     return clf

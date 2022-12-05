@@ -3,6 +3,24 @@ from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
+def get_page_texts(data):
+    """Get page text"""
+    d = {}
+    for block in data["blocks"]:
+        b_ = d.get(block["page_num"], [])
+        b_.append(block["text"])
+        d[block["page_num"]] = b_
+
+    # Also include image hashes in page texts
+    for hash_, bbox, p in data["image_hashes"]:
+        b_ = d.get(p, [])
+        b_.append(hash_)
+        d[p] = b_
+
+    result = [(p, " ".join(texts)) for p, texts in d.items()]
+    return zip(*result)
+
+
 def find_duplicate_pages(data_a, data_b):
     """
     block:
@@ -14,22 +32,6 @@ def find_duplicate_pages(data_a, data_b):
                         'block_num': block_num,
                     }
     """
-
-    def get_page_texts(data):
-        d = {}
-        for block in data["blocks"]:
-            b_ = d.get(block["page_num"], [])
-            b_.append(block["text"])
-            d[block["page_num"]] = b_
-
-        # Also include image hashes in page texts
-        for hash_, bbox, p in data["image_hashes"]:
-            b_ = d.get(p, [])
-            b_.append(hash_)
-            d[p] = b_
-
-        result = [(p, " ".join(texts)) for p, texts in d.items()]
-        return zip(*result)
 
     page_nums_a, texts_a = get_page_texts(data_a)
     page_nums_b, texts_b = get_page_texts(data_b)
