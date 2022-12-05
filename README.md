@@ -28,16 +28,16 @@ To run this, an example would be:
 
 
 ```bash
-python compare_pdfs.py -f a.pdf b.pdf -v -p
+python compare_pdfs.py -f ./sample_files/sample_file_1.pdf ./sample_files/sample_file_2.pdf -v -p
 ```
 
 To Execute without using cached data
 ```bash
-python compare_pdfs.py -f a.pdf b.pdf -v -p -c
+python compare_pdfs.py -f ./sample_files/sample_file_1.pdf ./sample_files/sample_file_2.pdf -v -p -c
 ```
 
 ```bash
-python compare_pdfs.py -f data/test_pdfs/00026_04_fda-K071597_test_data.pdf data/test_pdfs/small_test/copied_data.pdf
+python compare_pdfs.py -f ./sample_files/sample_file_1.pdf ./sample_files/sample_file_1.pdf
 ```
 
 ## Run Pytest
