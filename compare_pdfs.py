@@ -148,10 +148,10 @@ def get_version():
 # -------------------------------------------------------------------------------
 # MAIN
 # -------------------------------------------------------------------------------
-def main(
+def compare_pdf_files(
     filenames,
-    methods,
-    pretty_print,
+    methods: list = False,
+    pretty_print: bool = False,
     verbose: bool = False,
     regen_cache: bool = False,
     sidecar_only: bool = False,
@@ -420,7 +420,7 @@ if __name__ == "__main__":
     if args.version:
         print(VERSION)
     else:
-        main(
+        compare_pdf_files(
             filenames=args.filenames,
             methods=args.methods,
             pretty_print=args.pretty_print,

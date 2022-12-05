@@ -88,5 +88,4 @@ def calculate_importance_score(suspicious_pairs):
         sus["importance"] = importance
 
     sorted_sus_pairs = sorted(suspicious_pairs, key=lambda sus: -sus["importance"])
-
     return sorted_sus_pairs

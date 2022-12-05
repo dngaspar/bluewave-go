@@ -32,7 +32,7 @@ def main():
             fname_a = FILENAMES[i]
             fname_b = FILENAMES[j]
 
-            result = compare_pdfs.main(
+            result = compare_pdfs.compare_pdf_files(
                 filenames=[fname_a, fname_b],
                 verbose=True,
                 methods=None,
