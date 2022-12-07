@@ -1,6 +1,8 @@
+import concurrent.futures
 import json
 import os
 import warnings
+from multiprocessing import cpu_count
 
 # PyMuPDF
 import fitz
@@ -72,23 +74,22 @@ def block_skip_conditions(block_text):
     return conditions
 
 
-def read_blocks_and_hashes(filename):
-    if filename[-4:] != ".pdf":
-        raise Exception("Fitz cannot read non-PDF file", filename)
-
-    text_blocks = []
-    image_hashes = []
-
+def get_page_count(filename):
+    """Get page count from the file"""
     with fitz.open(filename) as doc:
+        count = doc.page_count
+    return count
 
-        n_pages = doc.page_count
+
+def get_page_block_and_hashes(file_name, page_num):
+    """Get page block and hashes"""
+    image_hashes = []
+    text_blocks = []
+    with fitz.open(file_name) as doc:
         cum_len_text = 0
         cum_len_digits = 0
-        for page in doc:
-
-            if any(page_skip_conditions(page.get_text())):
-                continue
-
+        page = doc.load_page(page_num)
+        if not any(page_skip_conditions(page.get_text())):
             block_num = 0
             # t0 = time.time()
             # page_d = page.get_text('dict')
@@ -130,7 +131,81 @@ def read_blocks_and_hashes(filename):
                         cum_len_text += len(block_text)
                         cum_len_digits += len(block_digits)
                         block_num += 1
-            # print(time.time()-t0, 'other stuff')
+                # print(time.time()-t0, 'other stuff')
+
+    return image_hashes, text_blocks
+
+
+def read_blocks_and_hashes(filename):
+    if filename[-4:] != ".pdf":
+        raise Exception("Fitz cannot read non-PDF file", filename)
+
+    text_blocks = []
+    image_hashes = []
+
+    ###
+    n_pages = get_page_count(filename)
+    with concurrent.futures.ProcessPoolExecutor(cpu_count()) as executor:
+        args_ = [
+            (filename, page_num)
+            for page_num in range(n_pages)
+        ]
+        result = executor.map(get_page_block_and_hashes, *zip(*args_))
+        for item in result:
+            image_hashes.extend(item[0])
+            text_blocks.extend(item[1])
+    ###
+    # with fitz.open(filename) as doc:
+    #     n_pages = doc.page_count
+    #     cum_len_text = 0
+    #     cum_len_digits = 0
+    #     for page in doc:
+    #
+    #         if any(page_skip_conditions(page.get_text())):
+    #             continue
+    #
+    #         block_num = 0
+    #         # t0 = time.time()
+    #         # page_d = page.get_text('dict')
+    #         page_blocks = page.get_text("blocks")
+    #         page_images = page.get_image_info(hashes=True)
+    #         w = page.rect.width
+    #         h = page.rect.height
+    #         # print(time.time()-t0, 'get text dict')
+    #
+    #         # t0 = time.time()
+    #         for img in page_images:
+    #             # Relative to page size
+    #             if img["height"] > 200 and img["width"] > 200:
+    #                 hash_ = img["digest"].hex()
+    #                 x0, y0, x1, y1 = img["bbox"]
+    #                 bbox = (x0 / w, y0 / h, x1 / w, y1 / h)
+    #                 image_hashes.append((hash_, bbox, page.number + 1))
+    #
+    #         for raw_block in page_blocks:
+    #             x0, y0, x1, y1, block_text, n, typ = raw_block
+    #
+    #             if typ == 0:  # Only look at text blocks
+    #                 block_text = block_text.strip()
+    #                 block_text = block_text.encode("ascii", errors="ignore").decode()
+    #
+    #                 if not any(block_skip_conditions(block_text)):
+    #                     bbox = (x0 / w, y0 / h, x1 / w, y1 / h)  # Relative to page size
+    #                     block_digits = utils.get_digits(block_text)
+    #                     block = {
+    #                         "text": block_text,
+    #                         "digits": block_digits,
+    #                         "cum_len_text": cum_len_text,
+    #                         "cum_len_digits": cum_len_digits,
+    #                         "bbox": bbox,
+    #                         "page_num": page.number + 1,
+    #                         "block_num": block_num,
+    #                     }
+    #                     text_blocks.append(block)
+    #                     cum_len_text += len(block_text)
+    #                     cum_len_digits += len(block_digits)
+    #                     block_num += 1
+    # print(time.time()-t0, 'other stuff')
 
     return text_blocks, image_hashes, n_pages
 
