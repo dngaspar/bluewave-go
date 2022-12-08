@@ -93,7 +93,6 @@ def get_page_block_and_hashes(file_name, page_num):
             block_num = 0
             # t0 = time.time()
             # page_d = page.get_text('dict')
-            page_blocks = page.get_text("blocks")
             page_images = page.get_image_info(hashes=True)
             w = page.rect.width
             h = page.rect.height
@@ -108,9 +107,9 @@ def get_page_block_and_hashes(file_name, page_num):
                     bbox = (x0 / w, y0 / h, x1 / w, y1 / h)
                     image_hashes.append((hash_, bbox, page.number + 1))
 
+            page_blocks = page.get_text("blocks")
             for raw_block in page_blocks:
                 x0, y0, x1, y1, block_text, n, typ = raw_block
-
                 if typ == 0:  # Only look at text blocks
                     block_text = block_text.strip()
                     block_text = block_text.encode("ascii", errors="ignore").decode()
@@ -146,10 +145,7 @@ def read_blocks_and_hashes(filename):
     ###
     n_pages = get_page_count(filename)
     with concurrent.futures.ProcessPoolExecutor(cpu_count()) as executor:
-        args_ = [
-            (filename, page_num)
-            for page_num in range(n_pages)
-        ]
+        args_ = [(filename, page_num) for page_num in range(n_pages)]
         result = executor.map(get_page_block_and_hashes, *zip(*args_))
         for item in result:
             image_hashes.extend(item[0])
