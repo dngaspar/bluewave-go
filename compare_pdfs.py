@@ -163,14 +163,10 @@ def compare_pdf_files(
         print("Reading files...")
     read_pdf_sec_t0 = time.time()
     file_data = []
-    with concurrent.futures.ProcessPoolExecutor(cpu_count()) as executor:
-        args_ = [
-            (file_name, file_index, regen_cache, VERSION)
-            for file_index, file_name in enumerate(filenames)
-        ]
-        result = executor.map(get_file_data, *zip(*args_))
-        for item in result:
-            file_data.append(item)
+    for file_index, file_name in enumerate(filenames):
+        f_data = get_file_data(file_name, file_index, regen_cache, VERSION)
+        file_data.append(f_data)
+
     read_pdf_sec = time.time() - read_pdf_sec_t0
     if sidecar_only:
         return
