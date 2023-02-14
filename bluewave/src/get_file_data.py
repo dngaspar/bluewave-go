@@ -7,7 +7,7 @@ from multiprocessing import cpu_count
 # PyMuPDF
 import fitz
 
-from src import utils
+from bluewave.src import utils
 
 fitz.TOOLS.mupdf_display_errors(False)
 
