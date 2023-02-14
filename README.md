@@ -1,60 +1,45 @@
-# bluewave
+# Bluewave
 
 This is a Python script to analyze the similarity of two PDFs.
 
-
-## Installation
-
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install bluewave.
-
-```bash
-pip install -r requirements.txt
-```
-For installation of black in your local environment, please follow the instructions here:
-```
-https://black.readthedocs.io/en/stable/integrations/editors.html
-```
-
-## Models
-Create a folder "models" in root of the repo
-```bash
-mkdir models
-```
-
-Place clf.p file in the model's directory.
-
-## Usage
+### Usage
 To run this, an example would be:
 
+```
+from bluewave.compare_pdfs import compare_pdf_files
 
-```bash
-python compare_pdfs.py -f ./sample_files/sample_file_1.pdf ./sample_files/sample_file_2.pdf -v -p
+filenames = ["file1.pdf", "file2.pdf"]
+result = compare_pdf_files(filenames,
+                           methods=False,
+                           pretty_print=False,
+                           verbose=True,
+                           regen_cache=True,
+                           sidecar_only=False,
+                           no_importance=False)
 ```
 
-To Execute without using cached data
-```bash
-python compare_pdfs.py -f ./sample_files/sample_file_1.pdf ./sample_files/sample_file_2.pdf -v -p -c
-```
+To run with AWS connection
 
-```bash
-python compare_pdfs.py -f ./sample_files/sample_file_1.pdf ./sample_files/sample_file_1.pdf
 ```
+filenames = ["sample_files/sample_file_1.pdf", "sample_files/sample_file_2.pdf"]
+aws_config = {
+    "profile_name": "default",
+    "pdf_bucket": "bluewave2023",
+    "cache_bucket": "bluewave2023-cache",
+    "pg_username": "postgres",
+    "pg_password": "gizmo1228",
+    "pg_host": "bluewave.chwv9x0hbowb.us-east-2.rds.amazonaws.com",
+    "pg_port": 5432,
+    "pg_db": "bluewave",
+    "pg_table": "results"
+}
 
-## Run Pytest
-```bash
-pytest -vv --disable-warnings
-```
-
-## Delete all .jsoncached files
-```bash
-find . -name "*.jsoncached" -type f -delete
-```
-
-## Code Formatting
-```bash
-pre-commit run --all-files
-```
-
-```bash
-black src ./
+result = compare_pdf_files(filenames,
+                           methods=False,
+                           pretty_print=False,
+                           verbose=True,
+                           regen_cache=True,
+                           sidecar_only=False,
+                           no_importance=False,
+                           aws_config=aws_config)
 ```

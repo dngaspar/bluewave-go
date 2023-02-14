@@ -239,13 +239,15 @@ def is_compatible(v_current, v_cache):
 #     return blocks
 
 
-def get_file_data(full_filename, file_index, regen_cache, version):
+def get_file_data(full_filename, file_index, regen_cache, version, aws_client=None):
     blocks, image_hashes, n_pages = None, None, None
 
     # Check if cached exists next to PDF
     # if exists, check if version is compatible
     cached_filename = full_filename + ".jsoncached"
     try:
+        if aws_client:
+            aws_client.download_cache_from_s3(cached_filename)
         if os.path.exists(cached_filename) and not regen_cache:
             with open(cached_filename, "rb") as f:
                 cached = json.load(f)
@@ -260,14 +262,15 @@ def get_file_data(full_filename, file_index, regen_cache, version):
         # blocks = add_ignore_to_blocks(blocks)
 
         # And cache the data
-        with open(cached_filename, "w") as f:
-            json.dump(
-                {
-                    "version": version,
-                    "data": [blocks, image_hashes, n_pages],
-                },
-                f,
-            )
+        cache_data = {
+                        "version": version,
+                        "data": [blocks, image_hashes, n_pages],
+                    }
+        if aws_client:
+            aws_client.upload_cache_to_s3(cache_data, cached_filename)
+        else:
+            with open(cached_filename, "w") as f:
+                json.dump(cache_data, f)
 
     # Convert block boxes to Box class instances
     for block in blocks:
