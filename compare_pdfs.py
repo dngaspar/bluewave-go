@@ -18,6 +18,7 @@ from src.pdf_duplicate_pages import (
     remove_duplicate_pages,
 )
 from src.utils import list_of_unique_dicts
+from src.aws_client import AWSClient
 
 VERSION = "1.6.4"
 
@@ -156,15 +157,26 @@ def compare_pdf_files(
     regen_cache: bool = False,
     sidecar_only: bool = False,
     no_importance: bool = False,
+    aws_config: dict = None
 ):
     t0 = time.time()
 
+    aws_client = None
+    if aws_config:
+        aws_client = AWSClient(aws_config)
+
     if verbose:
         print("Reading files...")
+
+    for file_index, file_name in enumerate(filenames):
+        if file_name.startswith("s3://"):
+            local_path = aws_client.download_pdf_from_s3(file_name)
+            filenames[file_index] = local_path
+
     read_pdf_sec_t0 = time.time()
     file_data = []
     for file_index, file_name in enumerate(filenames):
-        f_data = get_file_data(file_name, file_index, regen_cache, VERSION)
+        f_data = get_file_data(file_name, file_index, regen_cache, VERSION, aws_client)
         file_data.append(f_data)
 
     read_pdf_sec = time.time() - read_pdf_sec_t0
@@ -313,6 +325,9 @@ def compare_pdf_files(
         print(json.dumps(result, indent=2), file=sys.stdout)
     else:
         print(json.dumps(result), file=sys.stdout)
+
+    if aws_client:
+        aws_client.insert_result_into_rds_pg_table(result)
 
     return result
 
