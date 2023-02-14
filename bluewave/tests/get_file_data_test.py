@@ -1,7 +1,7 @@
 import pytest
 
 from compare_pdfs import get_version
-from src.get_file_data import (
+from bluewave.src.get_file_data import (
     page_skip_conditions,
     block_skip_conditions,
     is_compatible,

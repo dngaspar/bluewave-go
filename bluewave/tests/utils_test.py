@@ -1,6 +1,6 @@
 import pytest
 
-from src.utils import get_models_directory, list_of_unique_dicts, get_digits
+from bluewave.src.utils import get_models_directory, list_of_unique_dicts, get_digits
 
 
 def test_get_models_directory():

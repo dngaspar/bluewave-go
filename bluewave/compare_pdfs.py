@@ -9,16 +9,16 @@ import sys
 import time
 from multiprocessing import cpu_count
 
-from src.compare_pdfs_text import compare_two_pdfs_text
-from src.get_file_data import get_file_data
-from src.importance_score import calculate_importance_score
-from src.pdf_duplicate_pages import (
+from bluewave.src.compare_pdfs_text import compare_two_pdfs_text
+from bluewave.src.get_file_data import get_file_data
+from bluewave.src.importance_score import calculate_importance_score
+from bluewave.src.pdf_duplicate_pages import (
     find_duplicate_pages,
     get_dup_page_results,
     remove_duplicate_pages,
 )
-from src.utils import list_of_unique_dicts
-from src.aws_client import AWSClient
+from bluewave.src.utils import list_of_unique_dicts
+from bluewave.src.aws_client import AWSClient
 
 VERSION = "1.6.4"
 

@@ -1,6 +1,6 @@
 import pytest
 
-from src.importance_score import calculate_importance_score
+from bluewave.src.importance_score import calculate_importance_score
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
 import pytest
 
-from src.find_common_substrings import find_common_substrings
+from bluewave.src.find_common_substrings import find_common_substrings
 
 
 @pytest.mark.parametrize(

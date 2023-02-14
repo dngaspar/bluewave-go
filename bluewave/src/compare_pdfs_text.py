@@ -3,7 +3,7 @@ import functools
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics.pairwise import pairwise_distances
 
-from src import find_common_substrings
+from bluewave.src import find_common_substrings
 
 
 # def find_blocks_of_sus_substr(blocks, sus_start, h):
