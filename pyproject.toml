@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bluewave"
-version = "0.0.6"
+version = "0.0.7"
 authors = [
     { name = "bballboy8", email = "author@example.com" },
 ]
 description = "Python script to analyze the similarity of two PDFs"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.6"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
