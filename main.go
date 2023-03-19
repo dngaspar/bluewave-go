@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bluewave/pdfconverter"
 	"fmt"
 	"os"
 	"sort"
@@ -45,14 +46,16 @@ func getPagelist(pages string) []int {
 }
 
 func main() {
-	// result := pdf.PdfToText("sample_files/sample_file_1.pdf", 1, 1)
-	// fmt.Println(result[0])
 	//  Create new parser object
 	parser := argparse.NewParser("Input", "Input args")
+
 	// Create string flag
 	fileName := parser.String("f", "filename", &argparse.Options{Required: true, Help: "PDF filename to create thumbnails of"})
+
 	pages := parser.String("p", "pages", &argparse.Options{Required: true, Help: "Pages to create thumbnails of (e.g. '1,2,3' or '3,5-10')"})
-	outPath := parser.String("o", "outpath", &argparse.Options{Required: true, Help: "Pages to create thumbnails of (e.g. '1,2,3' or '3,5-10')"})
+
+	outPath := parser.String("o", "outpath", &argparse.Options{Required: true, Help: "path where to save resulting images"})
+
 	// Parser input
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -61,6 +64,8 @@ func main() {
 		fmt.Println(parser.Usage(err))
 	}
 	pagelist := getPagelist(*pages)
-	fmt.Println(fileName, outPath, pagelist)
+	fmt.Println(*fileName, *outPath, pagelist)
+	_ = pdfconverter.PdfToImage(*fileName, *outPath, pagelist)
+	// fmt.Println(result)
 
 }

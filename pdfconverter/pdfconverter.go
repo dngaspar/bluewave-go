@@ -12,21 +12,18 @@ import (
 	"github.com/gen2brain/go-fitz"
 )
 
-func PdfToImage(filePath string, savePath string, fromPageNumber int, toPageNumber int) []image.Image {
-	doc, err := fitz.New(filePath)
-	if err != nil {
-		panic(err)
-	}
+func PdfToImage(filePath string, savePath string, pages []int) []image.Image {
+	doc, _ := fitz.New(filePath)
 	// len := toPageNumber - fromPageNumber
 	var result []image.Image
 	defer doc.Close()
-	for n := fromPageNumber - 1; n < toPageNumber; n++ {
-		img, err := doc.Image(n)
+	for _, page := range pages {
+		img, err := doc.Image(page - 1)
 		if err != nil {
 			panic(err)
 		}
 		// fmt.Printf("img: %s\n", reflect.TypeOf(img))
-		f, err := os.Create(filepath.Join(savePath, fmt.Sprintf("page%03d.jpg", n)))
+		f, err := os.Create(filepath.Join(savePath, fmt.Sprintf("page%03d.png", page)))
 		if err != nil {
 			panic(err)
 		}
@@ -44,20 +41,16 @@ func PdfToImage(filePath string, savePath string, fromPageNumber int, toPageNumb
 	return result
 }
 
-func PdfToText(filePath string, savePath string, fromPageNumber int, toPageNumber int) []string {
-	doc, err := fitz.New(filePath)
-	if err != nil {
-		panic(err)
-	}
+func PdfToText(filePath string, savePath string, pages []int) []string {
+	doc, _ := fitz.New(filePath)
 	var result []string
 	defer doc.Close()
-	for n := fromPageNumber - 1; n < toPageNumber; n++ {
-		text, err := doc.Text(n)
+	for _, page := range pages {
+		text, err := doc.Text(page - 1)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(text)
-		f, err := os.Create(filepath.Join(savePath, fmt.Sprintf("page%03d.text", n)))
+		f, err := os.Create(filepath.Join(savePath, fmt.Sprintf("page%03d.text", page)))
 		if err != nil {
 			panic(err)
 		}
@@ -71,22 +64,20 @@ func PdfToText(filePath string, savePath string, fromPageNumber int, toPageNumbe
 	return result
 }
 
-func PdfToHtml(filePath string, savePath string, fromPageNumber int, toPageNumber int) []string {
+func PdfToHtml(filePath string, savePath string, pages []int) []string {
 	doc, err := fitz.New(filePath)
 	if err != nil {
 		panic(err)
 	}
 	var result []string
 	defer doc.Close()
-	for n := fromPageNumber - 1; n < toPageNumber; n++ {
-		html, err := doc.HTML(n, true)
-		// fmt.Printf("html: %s\n", reflect.TypeOf(html))
-		// fmt.Println()
+	for _, page := range pages {
+		html, err := doc.HTML(page-1, true)
 		if err != nil {
 			panic(err)
 		}
 
-		f, err := os.Create(filepath.Join(savePath, fmt.Sprintf("test%03d.html", n)))
+		f, err := os.Create(filepath.Join(savePath, fmt.Sprintf("test%03d.html", page)))
 		if err != nil {
 			panic(err)
 		}
