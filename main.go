@@ -1,15 +1,11 @@
 package main
 
 import (
-	"bluewave/pdfconverter"
+	"bluewave/pdf"
 	"fmt"
 )
 
 func main() {
-	// doc, err := fitz.New("test.pdf")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	result := pdfconverter.PdfToHtml("test.pdf", "assets/html", 1, 4)
-	fmt.Println(result)
+	result := pdf.PdfToText("test.pdf", 1, 4)
+	fmt.Println(result[1])
 }
