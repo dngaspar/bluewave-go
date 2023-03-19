@@ -6,9 +6,8 @@ import (
 )
 
 func main() {
-	fmt.Println("Main!")
-	src.FindCommonSubstrings()
-	src.ComparePdfsText()
-	src.GetFileData()
-	src.TrainResultClassifiers()
+	fmt.Println(src.FindCommonSubstrings("abcde", "aaaabcbcd", 2))
+	// src.ComparePdfsText()
+	// src.GetFileData()
+	// src.TrainResultClassifiers()
 }
