@@ -1,0 +1,51 @@
+{
+    "version": "1.6.4",
+    "data": [
+        [
+            {
+                "text": "* Critical Care: This is a specific referral to board-certified critical care specialist. If it is after hours, there will be a call-in fee.",
+                "digits": "",
+                "cum_len_text": 0,
+                "cum_len_digits": 0,
+                "bbox": [
+                    0.058823529411764705,
+                    0.04435988146849353,
+                    0.7704429875791462,
+                    0.06163897177185675
+                ],
+                "page_num": 1,
+                "block_num": 0
+            },
+            {
+                "text": "** Please note cardiology availability changes from week to week and may not be available every week. Please contact us about availability.",
+                "digits": "",
+                "cum_len_text": 140,
+                "cum_len_digits": 0,
+                "bbox": [
+                    0.058823529411764705,
+                    0.07132955994268861,
+                    0.8502469530292586,
+                    0.08860865506258878
+                ],
+                "page_num": 1,
+                "block_num": 1
+            },
+            {
+                "text": "***Please call 604-514-8383 when sending direct transfers",
+                "digits": "6045148383",
+                "cum_len_text": 279,
+                "cum_len_digits": 0,
+                "bbox": [
+                    0.058823529411764705,
+                    0.0983245156028054,
+                    0.4040867923911101,
+                    0.11560361072270557
+                ],
+                "page_num": 1,
+                "block_num": 2
+            }
+        ],
+        [],
+        1
+    ]
+}
