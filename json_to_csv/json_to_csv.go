@@ -1,4 +1,4 @@
-package jsontocsv
+package json_to_csv
 
 import (
 	"context"

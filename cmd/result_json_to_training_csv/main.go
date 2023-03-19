@@ -3,7 +3,7 @@ package main
 import (
 
 	// "bluewave/pdfconverter"
-	"bluewave/jsontocsv"
+	"bluewave/json_to_csv"
 	"fmt"
 	"os"
 
@@ -27,5 +27,5 @@ func main() {
 		fmt.Println(parser.Usage(err))
 	}
 
-	jsontocsv.JsonToCsv(*fileName)
+	json_to_csv.JsonToCsv(*fileName)
 }
