@@ -1,0 +1,3 @@
+sp,text,is_bad
+"{""type"":""Common text string"",""string"":""a"",""is_bad"":true}",a,NaN
+"{""type"":""Common text string"",""string"":""hello"",""is_bad"":false}",hello,NaN
