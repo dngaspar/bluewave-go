@@ -6,13 +6,15 @@ import (
 	"github.com/gen2brain/go-fitz"
 )
 
-func PdfPageInfo(filePath string, page int) image.Image {
+func GetPageInfo(filePath string, page int) image.Image {
 	doc, err := fitz.New(filePath)
 	if err != nil {
 		panic(err)
 	}
-	var result image.Image
-	doc.Image(page)
+	img, err := doc.Image(page)
+	if err != nil {
+		panic(err)
+	}
 	defer doc.Close()
-	return result
+	return img
 }
