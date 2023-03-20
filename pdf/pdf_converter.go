@@ -1,4 +1,4 @@
-package pdf_converter
+package pdf
 
 import (
 	"fmt"

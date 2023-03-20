@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bluewave/pdf_converter"
+	"bluewave/pdf"
 	"fmt"
 	"os"
 	"sort"
@@ -65,7 +65,7 @@ func main() {
 	}
 	pagelist := getPagelist(*pages)
 	// fmt.Println(*fileName, *outPath, pagelist)
-	_ = pdf_converter.PdfToImage(*fileName, *outPath, pagelist)
+	_ = pdf.PdfToImage(*fileName, *outPath, pagelist)
 	// fmt.Println(result)
 
 }
