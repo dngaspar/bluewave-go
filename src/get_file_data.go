@@ -35,7 +35,7 @@ type Pdf struct {
 	Data    PdfInfo `json:"data"`
 }
 
-func GetMinMax(a []int) int {
+func GetMax(a []int) int {
 	max := a[0]
 	for _, value := range a {
 		if value > max {
@@ -43,6 +43,16 @@ func GetMinMax(a []int) int {
 		}
 	}
 	return max
+}
+
+func GetMin(a []int) int {
+	min := a[0]
+	for _, value := range a {
+		if value < min {
+			min = value
+		}
+	}
+	return min
 }
 
 func isCompatible(vCurrent string, vCache string) bool {
@@ -57,57 +67,181 @@ func isCompatible(vCurrent string, vCache string) bool {
 
 }
 
+var white uint32 = 55535
+
+func checkWhite(page image.Image, x int, y int) bool {
+	r, g, b, _ := page.At(x, y).RGBA()
+	if r >= white && g >= white && b >= white {
+		return true
+	} else {
+		return false
+	}
+}
+
 func getPageBlockAndHashes(fileName string, pageNum int) {
 	// """Get page block and hashes"""
 	// var imageHashes []ImageHash
 	// var textBlocks []Block
 	var pageImage image.Image
+
 	pageImage = pdf.GetPageInfo(fileName, pageNum)
 	// min := pageImage.Bounds().Min
 	max := pageImage.Bounds().Max
-	fmt.Println(max)
-	r, g, b, a := pageImage.At(3, 4).RGBA()
-	fmt.Println(max, r, g, b, a)
-	maxX := max.X
-	maxY := max.Y
-	var blockarr [][]int
-	var white uint32 = 65535
-	var blockNo int
-	var xarr []int
-	for y := 0; y < maxY; y++ {
-		var ok int = 0
-		// var firstline int = 0
-		var len int = 0
-		for x := 0; x < maxX; x++ {
-			r, g, b, a := pageImage.At(x, y).RGBA()
-			if r != white || g != white || b != white || a != white {
+	// fmt.Println(max)
+	// r, g, b, a := pageImage.At(3, 4).RGBA()
+	// fmt.Println(max, r, g, b, a)
+	m := max.X
+	n := max.Y
+	// var blockarr [22222][22222]int
+	type Data struct {
+		color int
+		x     int
+		y     int
+		st    int
+		en    int
+	}
+
+	type Info struct {
+		x int
+		y int
+		w int
+		h int
+	}
+	var Array []Data
+
+	for i := 0; i < n; i++ {
+		var ok int
+		minid := m
+		maxid := -1
+		for j := 0; j < m; j++ {
+			// r, g, b, a := pageImage.At(i, j).RGBA()
+			if checkWhite(pageImage, j, i) == false {
+				// fmt.Println(r, g, b, a)
 				ok = 1
-				// if firstline == 0 {
-				// 	firstline = 1
-				// }
-				xarr = append(xarr, x)
-				len = x
+				minid = GetMin([]int{minid, j})
+				maxid = GetMax([]int{maxid, j})
 			}
 		}
-		if ok == 0 {
-			// if firstline == 1 {
-			for i := 0; i < 4; i++ {
-				blockarr[blockNo][i] = 0
-			}
-			blockarr[blockNo][1] = y
-			if blockNo > 0 {
-				blockarr[blockNo-1][3] = y - blockarr[blockNo-1][1]
-			}
-			// firstline = 0
-			blockarr[blockNo][0] = GetMinMax(xarr)
-			blockarr[blockNo][2] = len
-			xarr = nil
-			blockNo++
-			// }
+		var temp Data
+		if ok == 1 {
+			temp.color = 1
+			temp.x = minid
+			temp.y = i
+			temp.st = minid
+			temp.en = maxid
+			Array = append(Array, temp)
+		} else {
+			temp.color = 0
+			temp.x = 0
+			temp.y = i
+			temp.st = 0
+			temp.en = m - 1
+			Array = append(Array, temp)
 		}
 	}
+
+	curid := -1
+	curwidth := 0
+
+	var info []Info
+	for i := 0; i < n; i++ {
+		if i == 0 {
+			if Array[i].color == 1 {
+				curid = 0
+				curwidth = GetMax([]int{curwidth, Array[i].en - Array[i].st})
+			}
+			continue
+		}
+		if curid == -1 && Array[i].color == 1 {
+			curid = i
+			curwidth = 0
+			curwidth = GetMax([]int{curwidth, Array[i].en - Array[i].st})
+		} else if Array[i].color == 0 && Array[i-1].color == 1 {
+			var temp Info
+			temp.x = Array[curid].x
+			temp.y = Array[curid].y
+			temp.w = curwidth
+			temp.h = i - curid
+			info = append(info, temp)
+			curid = -1
+			curwidth = 0
+			curwidth = GetMax([]int{curwidth, Array[i].en - Array[i].st})
+		} else if Array[i].color == 1 {
+			curwidth = GetMax([]int{curwidth, Array[i].en - Array[i].st})
+		} else {
+			curid = -1
+			curwidth = 0
+		}
+	}
+
+	if curid != -1 {
+		var temp Info
+		temp.x = Array[curid].x
+		temp.y = Array[curid].y
+		temp.w = curwidth
+		temp.h = n - curid
+		info = append(info, temp)
+	}
+
+	// var tempstr string
+	// for i := 0; i < len(Array); i++ {
+	// 	fmt.Print(Array[i].color)
+	// 	tempstr += strconv.Itoa(Array[i].color)
+	// }
+	// f, err := os.Create("data.txt")
+
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// defer f.Close()
+
+	// _, err2 := f.WriteString(tempstr)
+
+	// if err2 != nil {
+	// 	log.Fatal(err2)
+	// }
+
+	fmt.Println("done")
+
+	// var blockNo int
+	// var xarr []int
+	// for y := 0; y < maxY; y++ {
+	// 	var ok int = 0
+	// 	// var firstline int = 0
+	// 	var len int = 0
+	// 	for x := 0; x < maxX; x++ {
+	// 		r, g, b, a := pageImage.At(x, y).RGBA()
+	// 		if r != white || g != white || b != white || a != white {
+	// 			ok = 1
+	// 			// if firstline == 0 {
+	// 			// 	firstline = 1
+	// 			// }
+	// 			xarr = append(xarr, x)
+	// 			len = x
+	// 		}
+	// 	}
+	// 	if ok == 0 {
+	// 		// if firstline == 1 {
+	// 		for i := 0; i < 4; i++ {
+	// 			blockarr[blockNo][i] = 0
+	// 		}
+	// 		blockarr[blockNo][1] = y
+	// 		if blockNo > 0 {
+	// 			blockarr[blockNo-1][3] = y - blockarr[blockNo-1][1]
+	// 		}
+	// 		// firstline = 0
+	// 		if xarr != nil {
+	// 			blockarr[blockNo][0] = GetMinMax(xarr)
+	// 		}
+	// 		blockarr[blockNo][2] = len
+	// 		xarr = nil
+	// 		blockNo++
+	// 		// }
+	// 	}
+	// }
 	// x := pageImage.At(2549, 3299)
-	fmt.Println(blockarr)
+	fmt.Println(info)
 
 }
 
