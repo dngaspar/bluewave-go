@@ -55,6 +55,50 @@ func GetMin(a []int) int {
 	return min
 }
 
+func pageSkipConditions(pageText string) bool {
+	conds := []string{
+		"FORM FDA ",
+		"Form FDA ",
+		"PAPERWORK REDUCTION ACT",
+		"PAYMENT IDENTIFICATION NUMBER",
+		"For more assistance with Adobe Reader",
+		"latest version of Adobe Reader",
+		"..................................................................",
+		"Safety Data Sheet",
+		"SAFETY DATA SHEET",
+		"Contains Nonbinding Recommendations",
+	}
+
+	for i := range conds {
+		if strings.Contains(pageText, conds[i]) {
+			return true
+		}
+	}
+	return false
+}
+
+func blockSkipConditions(blockText string) bool {
+	conds := []string{
+		"510(k)",
+		"New Hampshire Avenue",
+		"ISO ",
+		"IEC ",
+		"..............",
+		"Tel.:",
+		"TEL:",
+		"FAX:",
+		"Fax:",
+		"+86",
+		"86-519",
+	}
+	for i := range conds {
+		if strings.Contains(blockText, conds[i]) {
+			return true
+		}
+	}
+	return false
+}
+
 func isCompatible(vCurrent string, vCache string) bool {
 	// vCurrent and vCache are strings like 1.1.1
 	// compare first two digits
@@ -115,7 +159,7 @@ func getPageBlockAndHashes(fileName string, pageNum int) {
 		maxid := -1
 		for j := 0; j < m; j++ {
 			// r, g, b, a := pageImage.At(i, j).RGBA()
-			if checkWhite(pageImage, j, i) == false {
+			if !checkWhite(pageImage, j, i) {
 				// fmt.Println(r, g, b, a)
 				ok = 1
 				minid = GetMin([]int{minid, j})
@@ -182,66 +226,6 @@ func getPageBlockAndHashes(fileName string, pageNum int) {
 		temp.h = n - curid
 		info = append(info, temp)
 	}
-
-	// var tempstr string
-	// for i := 0; i < len(Array); i++ {
-	// 	fmt.Print(Array[i].color)
-	// 	tempstr += strconv.Itoa(Array[i].color)
-	// }
-	// f, err := os.Create("data.txt")
-
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// defer f.Close()
-
-	// _, err2 := f.WriteString(tempstr)
-
-	// if err2 != nil {
-	// 	log.Fatal(err2)
-	// }
-
-	fmt.Println("done")
-
-	// var blockNo int
-	// var xarr []int
-	// for y := 0; y < maxY; y++ {
-	// 	var ok int = 0
-	// 	// var firstline int = 0
-	// 	var len int = 0
-	// 	for x := 0; x < maxX; x++ {
-	// 		r, g, b, a := pageImage.At(x, y).RGBA()
-	// 		if r != white || g != white || b != white || a != white {
-	// 			ok = 1
-	// 			// if firstline == 0 {
-	// 			// 	firstline = 1
-	// 			// }
-	// 			xarr = append(xarr, x)
-	// 			len = x
-	// 		}
-	// 	}
-	// 	if ok == 0 {
-	// 		// if firstline == 1 {
-	// 		for i := 0; i < 4; i++ {
-	// 			blockarr[blockNo][i] = 0
-	// 		}
-	// 		blockarr[blockNo][1] = y
-	// 		if blockNo > 0 {
-	// 			blockarr[blockNo-1][3] = y - blockarr[blockNo-1][1]
-	// 		}
-	// 		// firstline = 0
-	// 		if xarr != nil {
-	// 			blockarr[blockNo][0] = GetMinMax(xarr)
-	// 		}
-	// 		blockarr[blockNo][2] = len
-	// 		xarr = nil
-	// 		blockNo++
-	// 		// }
-	// 	}
-	// }
-	// x := pageImage.At(2549, 3299)
-	fmt.Println(info)
 
 }
 
