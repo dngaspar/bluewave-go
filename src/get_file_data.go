@@ -1,7 +1,6 @@
 package src
 
 import (
-	"bluewave/pdf"
 	"encoding/json"
 	"fmt"
 	"image"
@@ -128,7 +127,7 @@ func getPageBlockAndHashes(fileName string, pageNum int) {
 	// var textBlocks []Block
 	var pageImage image.Image
 
-	pageImage = pdf.GetPageInfo(fileName, pageNum)
+	pageImage = GetPageInfo(fileName, pageNum)
 	// min := pageImage.Bounds().Min
 	max := pageImage.Bounds().Max
 	// fmt.Println(max)
